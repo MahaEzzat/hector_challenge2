@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<launch>
+
+<node name="hector_challenge2" pkg="hector_challenge2" type="hector_challenge2" output="screen" >
+<rosparam command="load" file="$(find hector_challenge2)/config/config.yaml" />
+</node>
+
+</launch>

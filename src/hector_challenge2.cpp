@@ -18,11 +18,9 @@ if(!Parameters())
       sub_state = n_.subscribe("/gazebo/model_states", 1, &HectorChallenge2::ModelStatecallback,this);  
       sub_pos = n_.subscribe("/ground_truth_to_tf/pose",1,&HectorChallenge2::posCallback,this); 
       sub_IMU = n_.subscribe("/raw_imu",1,&HectorChallenge2::imuCallback,this);  
-      sub_ = n_.subscribe("/scan",1,&HectorChallenge2::scanCallback,this);
       client = n_.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state"); 
-       
       pub_=  n_.advertise<geometry_msgs::Twist>("/cmd_vel",1);   
-      pub_mark = n_.advertise<visualization_msgs::Marker>( "/visualization_marker", 1 );
+
     }
 
     HectorChallenge2::~HectorChallenge2()
@@ -33,94 +31,119 @@ if(!Parameters())
 
 
 //Methods  
-    
-  void HectorChallenge2::scanCallback(const sensor_msgs::LaserScan &msg)
-    {
-         smallest_distance = 100;
-        for(int i = 0;i<msg.ranges.size(); ++i)
-        {
-            if((msg.ranges[i]>0.2) && (!isinf(msg.ranges[i])))
-            {
-                if(msg.ranges[i]<smallest_distance) {
-                smallest_distance=msg.ranges[i];
-                ref_angle = msg.angle_min + msg.angle_increment*i;
 
-                if(smallest_distance<0.3 && smallest_distance>-0.3) smallest_distance=0.0;
-                 }
-            }
-         }
+void HectorChallenge2::Path()
+{
 
-        double piller_i_x = smallest_distance*cos(-ref_angle);
-        double piller_i_y = smallest_distance*sin(-ref_angle);
+//Object initail position
+ pathx.push_back(0.0);
+ pathy.push_back(0.0);
+ pathz.push_back(3);
 
-         piller_x = (cos(yaw)*cos(pitch)-sin(roll)*sin(yaw)*sin(pitch))*piller_i_x + (sin(yaw)*cos(pitch)+sin(roll)*cos(yaw)*sin(pitch))*piller_i_y + pos_x;
-         piller_y = - cos(roll)*sin(yaw)*piller_i_x + cos(roll)*cos(yaw)*piller_i_y + pos_y;
-         piller_z = (cos(yaw)*sin(pitch)+cos(pitch)*sin(roll)*sin(yaw))*piller_i_x + (sin(yaw)*sin(pitch)-cos(pitch)*sin(roll)*cos(yaw))*piller_i_y + pos_z +0.02;
+ pathx.push_back(0.0);
+ pathy.push_back(0.0);
+ pathz.push_back(0.35);
 
-       // Object_position
-      // pathx[1] = piller_x;
-      // pathy[1] = piller_y;
+//object final position
+ pathx.push_back(0);
+ pathy.push_back(0);
+ pathz.push_back(3);
 
-        //ROS_INFO("Min distance: [%f]",smallest_distance);
-         //ROS_INFO("piller_x: [%f]  piller_y: [%f] piller_z: [%f]",piller_x,piller_y,piller_z);
+ pathx.push_back(0);
+ pathy.push_back(0);
+ pathz.push_back(0.5);
+ 
+ //target_points
+  for(int i=0;i<object_size-2;i++)
+ {   
+    pathx_target.push_back(0.0);
+    pathy_target.push_back(-0.71041);
+    pathz_target.push_back(0.4+i*0.101);
 
-        HectorChallenge2::PID();
-        HectorChallenge2::twistmeth();
-         HectorChallenge2::mark();
-            pub_.publish(msg2);
-            pub_mark.publish(marker);
-    }
+    pathx_target.push_back(0.0);
+    pathy_target.push_back(0.7105);
+    pathz_target.push_back(0.4+i*0.101);
 
+    pathx_target.push_back(0.0);
+    pathy_target.push_back(-0.238);
+    pathz_target.push_back(0.4+i*0.101);
+
+    pathx_target.push_back(0.0);
+    pathy_target.push_back(0.238);
+    pathz_target.push_back(0.4+i*0.101);
+ }
+
+}
+
+
+    void HectorChallenge2::ModelStatecallback(const gazebo_msgs::ModelStates::ConstPtr& msg_pos)
+{ 
+  pathx[0]= msg_pos->pose[count_object].position.x;
+  pathy[0]= msg_pos->pose[count_object].position.y;
+  
+
+  pathx[1]= msg_pos->pose[count_object].position.x;
+  pathy[1]= msg_pos->pose[count_object].position.y;
+  
+  
+  pathx[2]= pathx_target[count_object-1];
+  pathy[2]= pathy_target[count_object-1];
+  
+
+  pathx[3]= pathx_target[count_object-1];
+  pathy[3]= pathy_target[count_object-1];
+  pathz[3]= pathz_target[count_object-1];
+
+
+
+  object_name = msg_pos->name[count_object];
+  object_size = msg_pos->name.size();
+
+}
 
 
  void HectorChallenge2::imuCallback(const sensor_msgs::Imu &msg3)
     {
-
-
-
  tf::Quaternion bg(msg3.orientation.x,msg3.orientation.y,msg3.orientation.z,msg3.orientation.w);
  tf::Matrix3x3(bg).getRPY(roll,pitch,yaw);
  qaut_x = msg3.orientation.x;
  qaut_y = msg3.orientation.y;
  qaut_z = msg3.orientation.z;
  qaut_w = msg3.orientation.w;
-  if(count_path>1)
-  HectorChallenge2::objectmotion();
-
+ if(count_path>1) HectorChallenge2::objectmotion();
+ 
+ HectorChallenge2::PID();
+ HectorChallenge2::twist();
     }
 
 
-void HectorChallenge2::twistmeth()
-    {
-                   msg2.linear.x = vxi;
-                   msg2.linear.y = vyi;
-                   msg2.linear.z = vzi;
-                   msg2.angular.x = 0; 
-                   msg2.angular.y = 0; 
-                   msg2.angular.z = 0; 
-                   }
-
-
-
 void HectorChallenge2::posCallback(const geometry_msgs::PoseStamped &msg4)
-    {
-
+  {
   pos_x =  msg4.pose.position.x;
   pos_y =  msg4.pose.position.y;
   pos_z =  msg4.pose.position.z;
- 
-
-//ROS_INFO("x: [%f]  y: [%f]  z: [%f]",pos_x,pos_y,pos_z);
-
   }
+
+
+void HectorChallenge2::twist()
+    {
+  msg2.linear.x = vxi;
+  msg2.linear.y = vyi;
+  msg2.linear.z = vzi;
+  msg2.angular.x = 0;
+  msg2.angular.y = 0; 
+  msg2.angular.z = 0; 
+  pub_.publish(msg2);
+    }
+
+
+
 
 void HectorChallenge2::PID()
 {
-
 pos_targ_x = pathx[count_path];
 pos_targ_y = pathy[count_path];
 pos_targ_z = pathz[count_path];
-
 
 if(count==0)
 {
@@ -160,13 +183,17 @@ vx = kp_x*error_x + ki_x * error_i_x + kd_x *error_d_x;
 vy = kp_y*error_y + ki_y * error_i_y + kd_y *error_d_y;
 vz = kp_z*error_z + ki_z * error_i_z + kd_z *error_d_z;
 
-if( error < 0.1) {
+
+
+if( error < 0.02) {
     count_path++;
-    if(count_path>(pathx.size()-1))
+    ROS_INFO("count_path: [%d]",count_path);
+    if(count_path>(pathy.size()-1))
     { count_path=0;
       count_object++;
-      if(count_object=object_size) count_object=1;
+      if(count_object>object_size-2) count_object=1;
     }
+    ROS_INFO("count_path: [%d]", count_path);
 }
 
 pos_prev_x = pos_x;
@@ -178,69 +205,10 @@ pos_prev_z = pos_z;
 vxi = (cos(yaw)*cos(pitch)-sin(roll)*sin(yaw)*sin(pitch))*vx - cos(roll)*sin(yaw)*vy + (cos(yaw)*sin(pitch)+cos(pitch)*sin(roll)*sin(yaw))*vz;
 vyi = (sin(yaw)*cos(pitch)+sin(roll)*cos(yaw)*sin(pitch))*vx + cos(roll)*cos(yaw)*vy + (sin(yaw)*sin(pitch)-cos(pitch)*sin(roll)*cos(yaw))*vz;
 vzi = -cos(roll)*sin(pitch)*vx  +  sin(roll)*vy   + cos(pitch)*cos(roll)*vz;
-
-
-}
-
-
-void HectorChallenge2::Path()
-{
-
-
-  /*while(theta<44/7){
-    theta += 0.1;
-    r=1+1*cos(2*theta);
-    x = r*cos(theta);
-    y = r*sin(theta);
-    pathx.push_back(x);
-    pathy.push_back(y); 
-                    }
-*/
-
-//Object initail position
- pathx.push_back(-4.561470);
- pathy.push_back(6.515144);
- pathz.push_back(3);
-
- pathx.push_back(-4.561470);
- pathy.push_back(6.515144);
- pathz.push_back(0.48);
-
-//object final position
- pathx.push_back(0);
- pathy.push_back(0);
- pathz.push_back(3);
-
- pathx.push_back(0);
- pathy.push_back(0);
- pathz.push_back(0.5);
-
-
 }
 
 
 
-    void HectorChallenge2::mark()
-  {
-    marker.header.frame_id = "world";
-    marker.header.stamp = ros::Time();
-    marker.ns = "Piller";
-    
-    marker.type = visualization_msgs::Marker::SPHERE;
-    marker.action = visualization_msgs::Marker::ADD;
-
-   marker.pose.position.x = piller_x;
-   marker.pose.position.y = piller_y;
-   marker.pose.position.z = piller_z;
-   marker.scale.x = 1;
-   marker.scale.y = 1;
-   marker.scale.z = 0.1;
-   marker.color.a = 1.0; // Don't forget to set the alpha!
-   marker.color.r = 0.0;
-   marker.color.g = 1.0;
-   marker.color.b = 0.0;  
-   
-  } 
 
 void HectorChallenge2::objectmotion()
 
@@ -249,13 +217,13 @@ void HectorChallenge2::objectmotion()
     geometry_msgs::Point pr2_position;
     pr2_position.x = pos_x;
     pr2_position.y = pos_y;
-    pr2_position.z = pos_z-0.4;
+    pr2_position.z = pos_z-0.35;
 
     // orientation
     geometry_msgs::Quaternion pr2_orientation;
     pr2_orientation.x = qaut_x;
     pr2_orientation.y = qaut_y;
-    pr2_orientation.z = qaut_z;
+    pr2_orientation.z = 0.0;
     pr2_orientation.w = qaut_w;
 
     // pose (Pose + Orientation)
@@ -277,11 +245,11 @@ void HectorChallenge2::objectmotion()
     //Server
     if(client.call(srv))
     {
-        ROS_INFO("PR2's magic moving success!!");
+       // ROS_INFO("PR2's magic moving success!!");
     }
     else
     {
-        ROS_ERROR("Failed to magic move PR2! Error msg:%s",srv.response.status_message.c_str());
+       // ROS_ERROR("Failed to magic move PR2! Error msg:%s",srv.response.status_message.c_str());
     }
 
 
@@ -300,23 +268,10 @@ void HectorChallenge2::objectmotion()
         if(!n_.getParam("kd_x_",kd_x)) return false;
         if(!n_.getParam("kd_y_",kd_y)) return false;
         if(!n_.getParam("kd_z_",kd_z)) return false;
-
-
         return true;
     }
 
-    void HectorChallenge2::ModelStatecallback(const gazebo_msgs::ModelStates::ConstPtr& msg_pos)
-{
-    
-  pathx[0]= msg_pos->pose[count_object].position.x;
-  pathy[0]= msg_pos->pose[count_object].position.y;
-  pathx[1]= msg_pos->pose[count_object].position.x;
-  pathy[1]= msg_pos->pose[count_object].position.y;
-  object_name = msg_pos->name[count_object];
-  object_size = msg_pos->name.size();
-  //msg_pos->pose[count_object].position.z;
 
-}
 
 void HectorChallenge2::motor_enable()
 {

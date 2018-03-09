@@ -4,9 +4,7 @@
 #include <ros/ros.h>
 #include <string.h>
 #include <sstream>
-#include <sensor_msgs/LaserScan.h>
 #include <geometry_msgs/Twist.h>
-#include <visualization_msgs/Marker.h>
 #include <std_srvs/SetBool.h>
 #include <math.h>
 #include <sensor_msgs/Imu.h>
@@ -15,7 +13,6 @@
 #include <tf/LinearMath/Transform.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <vector>
-#include <string.h>
 #include "gazebo_msgs/SetModelState.h"
 #include <gazebo_msgs/ModelStates.h>
 #include <hector_uav_msgs/EnableMotors.h>
@@ -38,24 +35,17 @@ namespace hector_challenge2
 
 		//create Ros nodehandle, sub, and pub 
 			ros::NodeHandle& n_;
-			ros::Subscriber sub_;
 			ros::Subscriber sub_IMU;
 			ros::Subscriber sub_pos;
 			ros::Subscriber  sub_state;
 			ros::Publisher  pub_;
-			ros::Publisher  pub_mark;
 			ros::ServiceClient client;
 			ros::ServiceClient client_motor;
 			
 			
 		
 			
-		//create methods	
-			bool Parameters();
-			void twistmeth();
-			void mark();
-     
-	  void scanCallback(const sensor_msgs::LaserScan &msg);
+		//create methods		
 	  void imuCallback(const sensor_msgs::Imu &msg3);	
 	  void posCallback(const geometry_msgs::PoseStamped &msg4);
 	  void ModelStatecallback(const gazebo_msgs::ModelStates::ConstPtr& msg_pos);
@@ -63,9 +53,10 @@ namespace hector_challenge2
 	  void Path();
 	  void objectmotion();
 	  void motor_enable();
+	  bool Parameters();
+	  void twist();
 
           //create arguments
-          visualization_msgs::Marker marker;
 		  geometry_msgs::Twist msg2;
 		  
 		  
@@ -93,11 +84,14 @@ namespace hector_challenge2
 			double dt;
 			std::string object_name;
 			int count_path=0;
-			int count=0,count_object=1,object_size=0;
+			int count=0,count_object=1,object_size=27;
 			double theta=0.0;
             std::vector< double > pathx;
             std::vector< double > pathy;
 			std::vector< double > pathz;
+			std::vector< double > pathx_target;
+            std::vector< double > pathy_target;
+			std::vector< double > pathz_target;
 
 			
 			 

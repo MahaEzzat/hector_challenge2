@@ -16,6 +16,7 @@
 #include "gazebo_msgs/SetModelState.h"
 #include <gazebo_msgs/ModelStates.h>
 #include <hector_uav_msgs/EnableMotors.h>
+#include <std_msgs/Int8.h>
 
 
 
@@ -37,10 +38,13 @@ namespace hector_challenge2
 			ros::NodeHandle& n_;
 			ros::Subscriber sub_IMU;
 			ros::Subscriber sub_pos;
-			ros::Subscriber  sub_state;
-			ros::Publisher  pub_;
+			ros::Subscriber sub_state;
+			ros::Subscriber sub_object;
+			ros::Publisher pub_;
+			ros::Publisher pub_object;
 			ros::ServiceClient client;
 			ros::ServiceClient client_motor;
+			
 			
 			
 		
@@ -48,16 +52,19 @@ namespace hector_challenge2
 		//create methods		
 	  void imuCallback(const sensor_msgs::Imu &msg3);	
 	  void posCallback(const geometry_msgs::PoseStamped &msg4);
-	  void ModelStatecallback(const gazebo_msgs::ModelStates::ConstPtr& msg_pos);
+	  void ModelStatecallback(const gazebo_msgs::ModelStates::ConstPtr& msg_pos); 
+	  void object_subCallback(const std_msgs::Int8 &msg_obj);
 	  void PID(); 
 	  void Path();
 	  void objectmotion();
 	  void motor_enable();
 	  bool Parameters();
 	  void twist();
+	 
 
           //create arguments
 		  geometry_msgs::Twist msg2;
+		  std_msgs::Int8 object_index;
 		  
 		  
 			float ref_angle;
@@ -82,9 +89,9 @@ namespace hector_challenge2
 			float kd_x,kd_y,kd_z;
 			double x,y,r;
 			double dt;
-			std::string object_name;
+			std::string object_name,object_topic,pose_topic,imu_topic,motor_topic,cmd_topic,object_sub_topic;
 			int count_path=0;
-			int count=0,count_object=1,object_size=27;
+			int count=0,count_object,count_object_,next_object=2,object_size=27;
 			double theta=0.0;
             std::vector< double > pathx;
             std::vector< double > pathy;

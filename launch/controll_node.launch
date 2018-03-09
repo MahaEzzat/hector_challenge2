@@ -1,9 +1,33 @@
 <?xml version="1.0"?>
 
 <launch>
-
+<group ns="q1">
 <node name="hector_challenge2" pkg="hector_challenge2" type="hector_challenge2" output="screen" >
 <rosparam command="load" file="$(find hector_challenge2)/config/config.yaml" />
+<param name="object_topic_" type= "str" value= "/q1/object_number" />
+<param name="pose_topic_" type="str" value= "/q1/ground_truth_to_tf/pose"/>
+<param name="imu_topic_" type="str" value= "/q1/raw_imu"/>
+<param name="motor_topic_" type="str" value= "/q1/enable_motors"/>
+<param name="cmd_topic_" type="str" value= "/q1/cmd_vel"/>
+<param name="count_object_" type="int" value="1"/>
 </node>
+</group>
+
+
+<group ns="q2">
+<node name="hector_challenge2" pkg="hector_challenge2" type="hector_challenge2" output="screen" >
+<rosparam command="load" file="$(find hector_challenge2)/config/config.yaml" />
+<param name="object_topic_" type= "str" value= "/q2/object_number" />
+<param name="pose_topic_" type="str" value= "/q2/ground_truth_to_tf/pose"/>
+<param name="imu_topic_" type="str" value= "/q2/raw_imu"/>
+<param name="motor_topic_" type="str" value= "/q2/enable_motors"/>
+<param name="cmd_topic_" type="str" value= "/q2/cmd_vel"/>
+<param name="count_object_" type="int" value="2"/>
+</node>
+</group>
+
+
+
+<node name="object" pkg="hector_challenge2" type="object" output="screen"/>
 
 </launch>

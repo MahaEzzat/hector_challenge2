@@ -21,3 +21,11 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   ${catkin_LIBRARIES}
 )
+
+add_executable(object
+  src/object.cpp
+)
+add_dependencies(object ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(object
+  ${catkin_LIBRARIES}
+)

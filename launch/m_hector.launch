@@ -8,7 +8,7 @@
   <arg name="debug" default="false"/>
 
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-  <arg name="world_name" value="$(find hector_challenge2)/world/real_world.world"/>
+  <arg name="world_name" value="$(find hector_challenge2)/world/real_world2.world"/>
     <arg name="paused" value="$(arg paused)"/>
     <arg name="use_sim_time" value="$(arg use_sim_time)"/>
     <arg name="gui" value="$(arg gui)"/>
@@ -22,7 +22,7 @@
   <arg name="name" value="q1" />
   <arg name="tf_prefix" value="q1" />
   <arg name="x" default="3.0"/>
-  <arg name="y" default="0.0"/>
+  <arg name="y" default="-2.0"/>
   </include>
 </group>
 
@@ -31,16 +31,7 @@
   <arg name="name" value="q2" />
   <arg name="tf_prefix" value="q2" />
   <arg name="x" default="3.0"/>
-  <arg name="y" default="1.5"/>
-  </include>
-</group>
-
-<group ns="q3">
-<include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor_with_laser.launch" >
-  <arg name="name" value="q3" />
-  <arg name="tf_prefix" value="q3" />
-  <arg name="x" default="3.0"/>
-  <arg name="y" default="-1.5"/>
+  <arg name="y" default="2.0"/>
   </include>
 </group>
 

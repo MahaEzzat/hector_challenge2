@@ -16,13 +16,14 @@ if(!Parameters())
       HectorChallenge2::motor_enable();
       HectorChallenge2::Path();
       sub_state = n_.subscribe("/gazebo/model_states", 1, &HectorChallenge2::ModelStatecallback,this);  
-      sub_pos = n_.subscribe("/ground_truth_to_tf/pose",1,&HectorChallenge2::posCallback,this); 
-      sub_IMU = n_.subscribe("/raw_imu",1,&HectorChallenge2::imuCallback,this);  
+      sub_pos = n_.subscribe(pose_topic,1,&HectorChallenge2::posCallback,this); 
+      sub_IMU = n_.subscribe(imu_topic,1,&HectorChallenge2::imuCallback,this); 
+      sub_object = n_.subscribe("/object_number",1,&HectorChallenge2::object_subCallback,this);  
       client = n_.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state"); 
-      pub_=  n_.advertise<geometry_msgs::Twist>("/cmd_vel",1);   
+      pub_=  n_.advertise<geometry_msgs::Twist>(cmd_topic,1);   
+      pub_object=  n_.advertise<std_msgs::Int8>(object_topic,1); 
 
     }
-
     HectorChallenge2::~HectorChallenge2()
     {
 
@@ -38,16 +39,16 @@ void HectorChallenge2::Path()
 //Object initail position
  pathx.push_back(0.0);
  pathy.push_back(0.0);
- pathz.push_back(3);
+ pathz.push_back(2.0);
 
  pathx.push_back(0.0);
  pathy.push_back(0.0);
- pathz.push_back(0.35);
+ pathz.push_back(0.4);
 
 //object final position
- pathx.push_back(0);
- pathy.push_back(0);
- pathz.push_back(3);
+ pathx.push_back(0.0);
+ pathy.push_back(0.0);
+ pathz.push_back(1.5);
 
  pathx.push_back(0);
  pathy.push_back(0);
@@ -56,21 +57,25 @@ void HectorChallenge2::Path()
  //target_points
   for(int i=0;i<object_size-2;i++)
  {   
-    pathx_target.push_back(0.0);
-    pathy_target.push_back(-0.71041);
-    pathz_target.push_back(0.4+i*0.101);
 
     pathx_target.push_back(0.0);
-    pathy_target.push_back(0.7105);
-    pathz_target.push_back(0.4+i*0.101);
+    pathy_target.push_back(-0.710408);
+    pathz_target.push_back(0.48+i*0.1001);
 
     pathx_target.push_back(0.0);
-    pathy_target.push_back(-0.238);
-    pathz_target.push_back(0.4+i*0.101);
+    pathy_target.push_back(0.236802);
+    pathz_target.push_back(0.48+i*0.1001);
 
     pathx_target.push_back(0.0);
-    pathy_target.push_back(0.238);
-    pathz_target.push_back(0.4+i*0.101);
+    pathy_target.push_back(-0.236805);
+    pathz_target.push_back(0.48+i*0.1001);
+
+    pathx_target.push_back(0.0);
+    pathy_target.push_back(0.710408);
+    pathz_target.push_back(0.48+i*0.1001);
+
+
+
  }
 
 }
@@ -84,7 +89,7 @@ void HectorChallenge2::Path()
 
   pathx[1]= msg_pos->pose[count_object].position.x;
   pathy[1]= msg_pos->pose[count_object].position.y;
-  
+  pathz[1]= msg_pos->pose[count_object].position.z + 0.25;
   
   pathx[2]= pathx_target[count_object-1];
   pathy[2]= pathy_target[count_object-1];
@@ -155,6 +160,7 @@ t_prev = ros::Time::now().toSec();
   error_i_y = 0;
   error_i_z = 0;
   error=0.6;
+  count_object = count_object_;
   count++;
 }
 
@@ -187,14 +193,15 @@ vz = kp_z*error_z + ki_z * error_i_z + kd_z *error_d_z;
 
 if( error < 0.02) {
     count_path++;
-    ROS_INFO("count_path: [%d]",count_path);
     if(count_path>(pathy.size()-1))
     { count_path=0;
-      count_object++;
-      if(count_object>object_size-2) count_object=1;
+   count_object = next_object;
+      if(count_object>(object_size-3)) count_object=count_object_;
     }
-    ROS_INFO("count_path: [%d]", count_path);
 }
+
+object_index.data=count_object;
+pub_object.publish(object_index);
 
 pos_prev_x = pos_x;
 pos_prev_y = pos_y;
@@ -256,6 +263,12 @@ void HectorChallenge2::objectmotion()
 }
 
 
+void HectorChallenge2::object_subCallback(const std_msgs::Int8 &msg_obj)
+{
+next_object = msg_obj.data+1;
+}
+
+
 
   bool HectorChallenge2::Parameters()
     {
@@ -268,24 +281,29 @@ void HectorChallenge2::objectmotion()
         if(!n_.getParam("kd_x_",kd_x)) return false;
         if(!n_.getParam("kd_y_",kd_y)) return false;
         if(!n_.getParam("kd_z_",kd_z)) return false;
+        if(!n_.getParam("count_object_",count_object_)) return false;
+        if(!n_.getParam("object_topic_",object_topic)) return false;
+        if(!n_.getParam("pose_topic_",pose_topic)) return false;
+        if(!n_.getParam("imu_topic_",imu_topic)) return false;
+        if(!n_.getParam("motor_topic_",motor_topic)) return false;
+        if(!n_.getParam("cmd_topic_",cmd_topic)) return false;
         return true;
     }
 
 
-
 void HectorChallenge2::motor_enable()
 {
-    //motor enable
-    client_motor = n_.serviceClient<hector_uav_msgs::EnableMotors>("/enable_motors");
+    //motor enable 
+    client_motor = n_.serviceClient<hector_uav_msgs::EnableMotors>(motor_topic);
     hector_uav_msgs::EnableMotors srv2;
     srv2.request.enable = true;
     if(client_motor.call(srv2))
     {
-        ROS_INFO("motor magic moving success!!");
+        ROS_INFO("motor enable success!!");
     }
     else
     {
-        ROS_ERROR("Failed to magic move motor!");
+        ROS_ERROR("Failed to enable motor!");
     }
 }
 

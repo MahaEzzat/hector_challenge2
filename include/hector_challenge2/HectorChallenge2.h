@@ -92,7 +92,7 @@ namespace hector_challenge2
 			std::string object_name,object_topic,pose_topic,imu_topic,motor_topic,cmd_topic,object_sub_topic;
 			int count_path=0;
 			int count=0,count_object,count_object_,next_object=2,object_size=27;
-			double theta=0.0;
+			double height,theta=0.0;
             std::vector< double > pathx;
             std::vector< double > pathy;
 			std::vector< double > pathz;

@@ -10,6 +10,7 @@
 <param name="motor_topic_" type="str" value= "/q1/enable_motors"/>
 <param name="cmd_topic_" type="str" value= "/q1/cmd_vel"/>
 <param name="count_object_" type="int" value="1"/>
+<param name="height_" type="double" value="1.5"/>
 </node>
 </group>
 
@@ -23,6 +24,7 @@
 <param name="motor_topic_" type="str" value= "/q2/enable_motors"/>
 <param name="cmd_topic_" type="str" value= "/q2/cmd_vel"/>
 <param name="count_object_" type="int" value="2"/>
+<param name="height_" type="double" value="1.8"/>
 </node>
 </group>
 

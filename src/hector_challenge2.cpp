@@ -39,7 +39,7 @@ void HectorChallenge2::Path()
 //Object initail position
  pathx.push_back(0.0);
  pathy.push_back(0.0);
- pathz.push_back(2.0);
+ pathz.push_back(height);
 
  pathx.push_back(0.0);
  pathy.push_back(0.0);
@@ -48,7 +48,7 @@ void HectorChallenge2::Path()
 //object final position
  pathx.push_back(0.0);
  pathy.push_back(0.0);
- pathz.push_back(1.5);
+ pathz.push_back(height);
 
  pathx.push_back(0);
  pathy.push_back(0);
@@ -59,19 +59,19 @@ void HectorChallenge2::Path()
  {   
 
     pathx_target.push_back(0.0);
-    pathy_target.push_back(-0.710408);
+    pathy_target.push_back(-0.71041);
     pathz_target.push_back(0.48+i*0.1001);
 
     pathx_target.push_back(0.0);
-    pathy_target.push_back(0.236802);
+    pathy_target.push_back(0.23681);
     pathz_target.push_back(0.48+i*0.1001);
 
     pathx_target.push_back(0.0);
-    pathy_target.push_back(-0.236805);
+    pathy_target.push_back(-0.23681);
     pathz_target.push_back(0.48+i*0.1001);
 
     pathx_target.push_back(0.0);
-    pathy_target.push_back(0.710408);
+    pathy_target.push_back(0.71041);
     pathz_target.push_back(0.48+i*0.1001);
 
 
@@ -287,6 +287,7 @@ next_object = msg_obj.data+1;
         if(!n_.getParam("imu_topic_",imu_topic)) return false;
         if(!n_.getParam("motor_topic_",motor_topic)) return false;
         if(!n_.getParam("cmd_topic_",cmd_topic)) return false;
+        if(!n_.getParam("height_",height)) return false;
         return true;
     }
 

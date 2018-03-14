@@ -59,20 +59,20 @@ void HectorChallenge2::Path()
  {   
 
     pathx_target.push_back(0.0);
-    pathy_target.push_back(-0.71041);
-    pathz_target.push_back(0.48+i*0.1001);
+    pathy_target.push_back(-0.72);
+    pathz_target.push_back(0.55+i*0.1001);
 
     pathx_target.push_back(0.0);
-    pathy_target.push_back(0.23681);
-    pathz_target.push_back(0.48+i*0.1001);
+    pathy_target.push_back(0.24);
+    pathz_target.push_back(0.55+i*0.1001);
 
     pathx_target.push_back(0.0);
-    pathy_target.push_back(-0.23681);
-    pathz_target.push_back(0.48+i*0.1001);
+    pathy_target.push_back(-0.24);
+    pathz_target.push_back(0.55+i*0.1001);
 
     pathx_target.push_back(0.0);
-    pathy_target.push_back(0.71041);
-    pathz_target.push_back(0.48+i*0.1001);
+    pathy_target.push_back(0.72);
+    pathz_target.push_back(0.55+i*0.1001);
 
 
 
@@ -182,7 +182,7 @@ error_i_z += error_z*dt;
 error_x = pos_targ_x-pos_x;
 error_y = pos_targ_y-pos_y;
 error_z = pos_targ_z-pos_z;
-error = sqrt(error_x*error_x+error_y*error_y+error_z*error_z);
+error = sqrt(error_x*error_x+error_y*error_y+0.1*error_z*error_z);
 
 
 vx = kp_x*error_x + ki_x * error_i_x + kd_x *error_d_x;
@@ -191,7 +191,7 @@ vz = kp_z*error_z + ki_z * error_i_z + kd_z *error_d_z;
 
 
 
-if( error < 0.02) {
+if( error < 0.01) {
     count_path++;
     if(count_path>(pathy.size()-1))
     { count_path=0;

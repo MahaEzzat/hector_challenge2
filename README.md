@@ -18,6 +18,5 @@ How to run it: <br />
 9.roslaunch hector_challange2 controll_node.launch <br /> 
 
 Video link: <br /> 
-
 https://www.youtube.com/watch?v=yv-1k1VC6S0&index=2&list=PLsQg1LQa63kDVPgswaw-mNshjz-HAWOF6 <br /> 
 
